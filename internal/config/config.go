@@ -1,0 +1,107 @@
+package config
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+
+	"github.com/joho/godotenv"
+)
+
+type Config struct {
+	BotToken         string
+	RedisAddr        string
+	WorkerCount      int
+	TmpfsPath        string
+	MaxFileSize      int64
+	LocalAPIURL      string
+	DonorChatIDs     []int64
+	CookiesFile      string // Deprecated: use platform-specific cookies files
+	TikTokCookies    string // Path to TikTok cookies file (Netscape format)
+	InstagramCookies string // Path to Instagram cookies file (Netscape format)
+	YouTubeCookies   string // Path to YouTube cookies file (Netscape format)
+	MinFreeMemMB     int    // Minimum free memory in MB (default: 256)
+}
+
+func Load() (*Config, error) {
+	// Try to load .env file from current directory
+	envPath := ".env"
+
+	// Also try to find .env in the same directory as the binary
+	if exePath, err := os.Executable(); err == nil {
+		exeDir := filepath.Dir(exePath)
+		envPathInExeDir := filepath.Join(exeDir, ".env")
+		if _, err := os.Stat(envPathInExeDir); err == nil {
+			envPath = envPathInExeDir
+		}
+	}
+
+	// Try to load .env file (ignore error if file doesn't exist)
+	godotenv.Load(envPath)
+
+	cfg := &Config{
+		BotToken:         getEnv("BOT_TOKEN", ""),
+		RedisAddr:        getEnv("REDIS_ADDR", "localhost:6379"),
+		WorkerCount:      getEnvInt("WORKER_COUNT", 4),
+		TmpfsPath:        getEnv("TMPFS_PATH", "/dev/shm/videos"),
+		MaxFileSize:      int64(getEnvInt("MAX_FILE_SIZE_MB", 2048)) * 1024 * 1024,
+		LocalAPIURL:      getEnv("LOCAL_API_URL", "http://localhost:8089"),
+		DonorChatIDs:     parseChatIDs(getEnv("DONOR_CHAT_IDS", "")),
+		CookiesFile:      getEnv("COOKIES_FILE", ""),        // Deprecated: for backward compatibility
+		TikTokCookies:    getEnv("TIKTOK_COOKIES", ""),      // Path to TikTok cookies file
+		InstagramCookies: getEnv("INSTAGRAM_COOKIES", ""),   // Path to Instagram cookies file
+		YouTubeCookies:   getEnv("YOUTUBE_COOKIES", ""),     // Path to YouTube cookies file
+		MinFreeMemMB:     getEnvInt("MIN_FREE_MEM_MB", 256), // Minimum free memory in MB
+	}
+
+	// Validate required fields
+	if cfg.BotToken == "" {
+		return nil, fmt.Errorf("BOT_TOKEN is required\n\n" +
+			"Пожалуйста, установите переменную окружения BOT_TOKEN:\n" +
+			"  export BOT_TOKEN=\"your_token_here\"\n\n" +
+			"Или создайте файл .env со следующим содержимым:\n" +
+			"  BOT_TOKEN=your_token_here\n\n" +
+			"Получить токен можно у @BotFather в Telegram:\n" +
+			"  1. Откройте https://t.me/BotFather\n" +
+			"  2. Отправьте команду /newbot\n" +
+			"  3. Следуйте инструкциям\n" +
+			"  4. Скопируйте полученный токен\n\n" +
+			"Подробнее см. QUICKSTART.md или README.md")
+	}
+
+	return cfg, nil
+}
+
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
+func getEnvInt(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		if intValue, err := strconv.Atoi(value); err == nil {
+			return intValue
+		}
+	}
+	return defaultValue
+}
+
+func parseChatIDs(s string) []int64 {
+	if s == "" {
+		return nil
+	}
+
+	var ids []int64
+	parts := strings.Split(s, ",")
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if id, err := strconv.ParseInt(part, 10, 64); err == nil {
+			ids = append(ids, id)
+		}
+	}
+	return ids
+}

@@ -1,0 +1,21 @@
+[Unit]
+Description=Telegram Bot API (Local)
+After=network.target
+StartLimitIntervalSec=500
+StartLimitBurst=5
+
+[Service]
+Type=exec
+User=botuser
+Group=botuser
+WorkingDirectory=/opt/telegram-bot-api
+EnvironmentFile=/opt/telegram-bot-api/.env
+ExecStart=/usr/local/bin/telegram-bot-api --local --http-port=8089 --dir=/opt/telegram-bot-api/data
+Restart=on-failure
+RestartSec=5s
+MemoryHigh=512M
+MemoryMax=1G
+CPUQuota=50%
+
+[Install]
+WantedBy=multi-user.target

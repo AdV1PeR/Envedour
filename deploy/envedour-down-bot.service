@@ -1,0 +1,29 @@
+[Unit]
+Description=Envedour Down Bot (ARM Optimized)
+After=network.target redis.service telegram-bot-api.service
+Requires=redis.service
+Wants=telegram-bot-api.service
+StartLimitIntervalSec=500
+StartLimitBurst=5
+
+[Service]
+Type=exec
+User=botuser
+Group=botuser
+WorkingDirectory=/opt/envedour-bot
+EnvironmentFile=/opt/envedour-bot/.env
+Environment="GOMAXPROCS=4"
+Environment="GOGC=50"
+Environment="GOMEMLIMIT=512MiB"
+ExecStart=/opt/envedour-bot/envedour-bot-arm64 --arm-optimized
+Restart=on-failure
+RestartSec=5s
+MemoryHigh=3.5G
+MemoryMax=4G
+CPUQuota=380%
+IOWeight=100
+Nice=-10
+RuntimeWatchdogSec=30
+
+[Install]
+WantedBy=multi-user.target

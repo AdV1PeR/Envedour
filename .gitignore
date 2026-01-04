@@ -3,6 +3,7 @@ envedour-bot
 envedour-bot-arm64
 telegram-bot
 telegram-bot-arm64
+error.log
 *.exe
 *.exe~
 *.dll

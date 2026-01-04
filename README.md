@@ -5,7 +5,6 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 Высокопроизводительный, оптимизированный для ARM64 Telegram бот для скачивания видео и аудио с популярных платформ (YouTube, TikTok, Instagram и др.). Разработан специально для одноплатных компьютеров на базе ARM (OrangePi, Raspberry Pi и аналогичные).
-Бот уже запущен в Telegram - @EnvedourBot
 ## ✨ Возможности
 
 ### Основные функции
